@@ -198,15 +198,17 @@ position_settings = r"""
 
 class MockConnection:
     def get(self, url):
-        if url == "/Motors/AllProperties":
-            return json.loads(test_props)
-        elif url == "/Motors/PropertiesThatChangeOften":
-            return json.loads(changing_props)
-        elif url == "/Positions":
-            return json.loads(position_settings)
-        else:
-            msg = f"Unknown url: {url}"
-            raise ValueError(msg)
+        url_data_map = {
+            "/Motors/AllProperties": json.loads(test_props),
+            "/Motors/PropertiesThatChangeOften": json.loads(changing_props),
+            "/Positions": json.loads(position_settings),
+        }
+
+        if url in url_data_map:
+            return url_data_map[url]
+
+        msg = f"Unknown url: {url}"
+        raise ValueError(msg)
 
 
 def test_from_dict():

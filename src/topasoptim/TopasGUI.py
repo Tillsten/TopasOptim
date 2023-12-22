@@ -22,12 +22,11 @@ class TopasInfoLabel(QLabel):
     def __init__(self, topas):
         super().__init__()
         self.topas: Topas = topas
-        self.topas.motors_changed.connect(self.update_text)
 
     def update_text(self):
         s = ""
         for name, motor in self.topas.motors.items():
-            s += f"{name}: {motor.actual_position} {motor.target_positon}\n"
+            s += f"{name}: {motor.actual_position} {motor.target_position}\n"
         self.setText(s)
 
 

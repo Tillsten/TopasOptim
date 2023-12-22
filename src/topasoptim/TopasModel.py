@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import Any
 
 import requests
 
@@ -16,7 +17,7 @@ class TopasMotor:
     unit_name: str
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: dict[str, Any]) -> TopasMotor:
         return cls(
             name=data["Title"],
             index=data["Index"],
@@ -38,7 +39,7 @@ class MotorPositionSetting:
     time_created: str
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: dict[str, Any]) -> MotorPositionSetting:
         pos = [(m["Key"], m["Value"]) for m in data["MotorPositions"]]
         return cls(
             name=data["Name"],
@@ -61,17 +62,17 @@ class TopasConnection:
         port: str = "8000",
         serial_number: str = "14187",
         version="v0",
-    ):
+    ) -> TopasConnection:
         url = f"http://{ip_address}:{port}/{serial_number}/{version}/PublicAPI"
         return cls(baseAddress=url)
 
-    def put(self, url, data):
+    def put(self, url, data) -> requests.Response:
         return requests.put(self.baseAddress + url, json=data)
 
-    def post(self, url, data):
+    def post(self, url, data) -> requests.Response:
         return requests.post(self.baseAddress + url, json=data)
 
-    def get(self, url):
+    def get(self, url) -> Any:
         return requests.get(self.baseAddress + url).json()
 
 
@@ -93,15 +94,17 @@ class Topas:
 
     motors: dict[str, TopasMotor] = dataclasses.field(default_factory=dict)
     index_to_motor: dict[int, TopasMotor] = dataclasses.field(default_factory=dict)
-    connection: TopasConnection = dataclasses.field(default_factory=TopasConnection)
+    connection: TopasConnection = dataclasses.field(
+        default_factory=TopasConnection.from_info
+    )
     positions: dict[str, MotorPositionSetting] = dataclasses.field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.update_motors()
         self.index_to_motor = {motor.index: motor for motor in self.motors.values()}
         self.load_positions()
 
-    def update_motors(self):
+    def update_motors(self) -> None:
         "Update the motor information"
         data = self.connection.get("/Motors/AllProperties")["Motors"]
         self.motors = {motor["Title"]: TopasMotor.from_dict(motor) for motor in data}
@@ -120,7 +123,7 @@ class Topas:
         "Get the status of the shutter"
         return self.get("/ShutterInterlock/IsShutterOpen")
 
-    def toggle_shutter(self, shutter_open: bool):
+    def toggle_shutter(self, shutter_open: bool) -> None:
         "Toggle the shutter"
         self.connection.put("/ShutterInterlock/OpenCloseShutter", shutter_open)
 
@@ -152,7 +155,7 @@ class Topas:
         "Save the current motor positions"
         id = self.connection.post("/SaveCurrent", {"Name": name, "Folder": folder})
         self.load_positions()
-        return id
+        return id.json()
 
     def load_positions(self) -> None:
         "Load all saved motor positions"
@@ -162,7 +165,9 @@ class Topas:
     def goto_position_by_name(self, name: str) -> None:
         """Move the motors to a saved position called `name`
         If there are multiple positions with the same name, the first one is used"""
-        first_match = next(p for p in self.positions if p.name == name)
+        first_match: MotorPositionSetting = next(
+            v for k, v in self.positions.items() if v.name == name
+        )
         self.goto_position_by_id(first_match.GUID)
 
     def goto_position_by_id(self, guid: str) -> None:

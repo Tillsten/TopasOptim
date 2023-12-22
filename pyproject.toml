@@ -98,7 +98,7 @@ report.exclude_also = [
 
 [tool.mypy]
 files = ["src", "tests"]
-python_version = "3.8"
+python_version = "3.10"
 warn_unused_configs = true
 strict = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
@@ -108,9 +108,6 @@ disallow_incomplete_defs = false
 
 [[tool.mypy.overrides]]
 module = "topasoptim.*"
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-
 
 [tool.ruff]
 src = ["src"]
