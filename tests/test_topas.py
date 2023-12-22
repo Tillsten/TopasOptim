@@ -1,6 +1,8 @@
-import topasoptim.TopasModel as tm
+from __future__ import annotations
+
 import json
 
+import topasoptim.TopasModel as tm
 
 test_props = """{
   "Motors": [
@@ -192,13 +194,15 @@ position_settings = r"""
   }
 ]
 """
+
+
 class MockConnection:
     def get(self, url):
         if url == "/Motors/AllProperties":
             return json.loads(test_props)
         elif url == "/Motors/PropertiesThatChangeOften":
             return json.loads(changing_props)
-        elif url == '/Positions':
+        elif url == "/Positions":
             return json.loads(position_settings)
         else:
             msg = f"Unknown url: {url}"

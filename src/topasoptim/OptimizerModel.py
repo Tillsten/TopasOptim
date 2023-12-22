@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Protocol
 
 import numpy as np
@@ -15,4 +17,3 @@ class OptimizerModel(Protocol):
     def get_history(self) -> np.ndarray:
         """Get the history of the optimizer."""
         ...
-

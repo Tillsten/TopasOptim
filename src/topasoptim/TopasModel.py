@@ -27,6 +27,7 @@ class TopasMotor:
             unit_name=data["UnitName"],
         )
 
+
 @dataclasses.dataclass
 class MotorPositionSetting:
     name: str
@@ -38,7 +39,7 @@ class MotorPositionSetting:
 
     @classmethod
     def from_dict(cls, data):
-        pos = [(m['Key'], m['Value']) for m in data["MotorPositions"]]
+        pos = [(m["Key"], m["Value"]) for m in data["MotorPositions"]]
         return cls(
             name=data["Name"],
             comment=data["Comment"],
@@ -47,6 +48,7 @@ class MotorPositionSetting:
             positions=pos,
             time_created=data["TimeCreated"],
         )
+
 
 @dataclasses.dataclass(kw_only=True)
 class TopasConnection:
