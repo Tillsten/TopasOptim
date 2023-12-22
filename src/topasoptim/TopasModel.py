@@ -1,6 +1,6 @@
 from __future__ import annotations
+
 import dataclasses
-import json
 
 import requests
 
@@ -27,6 +27,26 @@ class TopasMotor:
             unit_name=data["UnitName"],
         )
 
+@dataclasses.dataclass
+class MotorPositionSetting:
+    name: str
+    comment: str
+    folder: str
+    GUID: str
+    positions: list[tuple[int, int]]
+    time_created: str
+
+    @classmethod
+    def from_dict(cls, data):
+        pos = [(m['Key'], m['Value']) for m in data["MotorPositions"]]
+        return cls(
+            name=data["Name"],
+            comment=data["Comment"],
+            folder=data["Folder"],
+            GUID=data["GUID"],
+            positions=pos,
+            time_created=data["TimeCreated"],
+        )
 
 @dataclasses.dataclass(kw_only=True)
 class TopasConnection:
@@ -66,16 +86,18 @@ class Topas:
         Dictionary of motor indices to motors
     connection : TopasConnection
         Connection to the OPA
-
+    positions : dict[str, MotorPositionSetting]
     """
 
     motors: dict[str, TopasMotor] = dataclasses.field(default_factory=dict)
     index_to_motor: dict[int, TopasMotor] = dataclasses.field(default_factory=dict)
     connection: TopasConnection = dataclasses.field(default_factory=TopasConnection)
+    positions: dict[str, MotorPositionSetting] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self):
         self.update_motors()
         self.index_to_motor = {motor.index: motor for motor in self.motors.values()}
+        self.load_positions()
 
     def update_motors(self):
         "Update the motor information"
@@ -123,3 +145,24 @@ class Topas:
         "Move multiple motors to positions"
         for name, position in positions.items():
             self.move_motor(name, position)
+
+    def save_positions(self, name: str, folder: str) -> str:
+        "Save the current motor positions"
+        id = self.connection.post("/SaveCurrent", {"Name": name, "Folder": folder})
+        self.load_positions()
+        return id
+
+    def load_positions(self) -> None:
+        "Load all saved motor positions"
+        data = self.connection.get("/Positions")
+        self.positions = {m["GUID"]: MotorPositionSetting.from_dict(m) for m in data}
+
+    def goto_position_by_name(self, name: str) -> None:
+        """Move the motors to a saved position called `name`
+        If there are multiple positions with the same name, the first one is used"""
+        first_match = next(p for p in self.positions if p.name == name)
+        self.goto_position_by_id(first_match.GUID)
+
+    def goto_position_by_id(self, guid: str) -> None:
+        """Move the motors to a saved position with a given GUID"""
+        self.connection.put("/MoveMotorsToPosition", guid)

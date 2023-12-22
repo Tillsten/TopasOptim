@@ -154,13 +154,52 @@ changing_props = """[
   }
 ]"""
 
-
+position_settings = r"""
+[
+  {
+    "Comment": "",
+    "Folder": "",
+    "GUID": "bdd385a8-15fc-40c4-ba00-62b2aa95deef",
+    "MotorPositions": [
+      {
+        "Key": 65,
+        "Value": 76
+      },
+      {
+        "Key": 105,
+        "Value": 230
+      }
+    ],
+    "Name": "",
+    "TimeCreated": "\/Date(1500038173392+0300)\/"
+  },
+  {
+    "Comment": "",
+    "Folder": "",
+    "GUID": "dedfbc9a-9e32-4fff-be80-e25824afac80",
+    "MotorPositions": [
+      {
+        "Key": 36,
+        "Value": 87
+      },
+      {
+        "Key": 217,
+        "Value": 199
+      }
+    ],
+    "Name": "",
+    "TimeCreated": "\/Date(1500038173392+0300)\/"
+  }
+]
+"""
 class MockConnection:
     def get(self, url):
         if url == "/Motors/AllProperties":
             return json.loads(test_props)
         elif url == "/Motors/PropertiesThatChangeOften":
             return json.loads(changing_props)
+        elif url == '/Positions':
+            return json.loads(position_settings)
         else:
             msg = f"Unknown url: {url}"
             raise ValueError(msg)
