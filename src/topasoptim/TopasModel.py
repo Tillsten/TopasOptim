@@ -54,6 +54,7 @@ class MotorPositionSetting:
 @dataclasses.dataclass(kw_only=True)
 class TopasConnection:
     baseAddress: str
+    timeout: float = 1.0
 
     @classmethod
     def from_info(
@@ -67,13 +68,13 @@ class TopasConnection:
         return cls(baseAddress=url)
 
     def put(self, url, data) -> requests.Response:
-        return requests.put(self.baseAddress + url, json=data)
+        return requests.put(self.baseAddress + url, json=data, timeout=self.timeout)
 
     def post(self, url, data) -> requests.Response:
-        return requests.post(self.baseAddress + url, json=data)
+        return requests.post(self.baseAddress + url, json=data, timeout=self.timeout)
 
     def get(self, url) -> Any:
-        return requests.get(self.baseAddress + url).json()
+        return requests.get(self.baseAddress + url, timeout=self.timeout).json()
 
 
 @dataclasses.dataclass
@@ -121,7 +122,7 @@ class Topas:
 
     def is_open(self) -> bool:
         "Get the status of the shutter"
-        return self.get("/ShutterInterlock/IsShutterOpen")
+        return self.connection.get("/ShutterInterlock/IsShutterOpen")
 
     def toggle_shutter(self, shutter_open: bool) -> None:
         "Toggle the shutter"
@@ -153,9 +154,9 @@ class Topas:
 
     def save_positions(self, name: str, folder: str) -> str:
         "Save the current motor positions"
-        id = self.connection.post("/SaveCurrent", {"Name": name, "Folder": folder})
+        gui_id = self.connection.post("/SaveCurrent", {"Name": name, "Folder": folder})
         self.load_positions()
-        return id.json()
+        return gui_id.json()
 
     def load_positions(self) -> None:
         "Load all saved motor positions"

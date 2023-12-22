@@ -17,8 +17,6 @@ class OptimizerModel(Protocol):
         func: Callable[[np.ndarray[Any, np.float64]], float],
     ) -> float:
         """Perform a step of the optimizer."""
-        ...
 
     def get_history(self) -> np.ndarray[Any, float]:
         """Get the history of the optimizer."""
-        ...
